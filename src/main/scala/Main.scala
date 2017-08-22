@@ -1,5 +1,6 @@
 import java.nio.file.Paths
 
+import Models.{Film, Rating}
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -8,9 +9,6 @@ import akka.http.scaladsl.model._
 import akka.stream._
 import akka.stream.scaladsl._
 import akka.util.ByteString
-import org.json4s._
-import org.json4s.native.JsonMethods._
-import org.json4s.native.Serialization.{read, write}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
@@ -33,7 +31,7 @@ object Main extends App {
 
   val poolClient: Flow[(HttpRequest, Film), (Try[HttpResponse], Film), NotUsed] = Http().superPool[Film]()
 
-  val films: Source[Film, Future[IOResult]] = FileIO.fromPath(Paths.get("src/main/resources/data.json"))
+  val films: Source[Film, Future[IOResult]] = FileIO.fromPath(Paths.get("src/main/resources/small.json"))
     .via(JsonFraming.objectScanner(1024))
     .map(_.utf8String)
     .map(Film.fromJson)
@@ -48,34 +46,10 @@ object Main extends App {
         println(s"Uploading file ${film.title} failed with $ex")
         Future("") -> film
     }
-    .mapAsync(10)(a => a._1.map(x => Film(a._2.title, a._2.releaseYear, Some(Ratings.fromJson(x)))))
+    .mapAsync(10)(a => a._1.map(x => Film(a._2.title, a._2.releaseYear, Some(Rating.fromJson(x)))))
     .map(Film.toString)
     .map(s => ByteString(s + "\n"))
-    .runWith(FileIO.toPath(Paths.get("output.json")))
+    .runWith(FileIO.toPath(Paths.get("small-output.json")))
     .onComplete(_ => system.terminate())
 
-}
-
-case class Film(title: String, releaseYear: Option[Int], ratings: Option[List[Rating]])
-object Film {
-  implicit val formats = DefaultFormats
-  def fromJson(json: String): Film = {
-    parse(json).camelizeKeys.extract[Film]
-  }
-  def toString(film: Film): String = {
-    write(film)
-  }
-}
-
-case class Rating(Source: String, Value: String)
-
-object Ratings {
-  def fromJson(json: String): List[Rating] = {
-    implicit val formats = DefaultFormats
-    try {
-      (parse(json) \ "Ratings").children.map(_.extract[Rating])
-    } catch {
-      case ex: Exception => List[Rating]()
-    }
-  }
 }
