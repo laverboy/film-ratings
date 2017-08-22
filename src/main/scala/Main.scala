@@ -39,14 +39,15 @@ object Main extends App {
   val result = films
     .mapAsync(1)(createRequest)
     .via(poolClient)
-    .runForeach {
+    .map {
       case (Success(response), film) =>
-        println(s"Result for film: ${film.title} was successful: ${response.entity}")
-        response.discardEntityBytes() // don't forget this
-
+        response.entity.toStrict(5 seconds).map(_.data.decodeString("UTF-8")) -> film
       case (Failure(ex), film) =>
         println(s"Uploading file ${film.title} failed with $ex")
+        Future("") -> film
     }
+    .mapAsync(1)(a => a._1.map(x => Film(a._2.title, a._2.releaseYear, Some(Ratings.fromJson(x)))))
+    .runForeach(println)
 
   implicit val ec = system.dispatcher
   result.onComplete(_ => system.terminate())
