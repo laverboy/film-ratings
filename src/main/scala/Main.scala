@@ -52,9 +52,7 @@ object Main extends App {
     .map(Film.toString)
     .map(s => ByteString(s + "\n"))
     .runWith(FileIO.toPath(Paths.get("output.json")))
-
-  implicit val ec = system.dispatcher
-  result.onComplete(_ => system.terminate())
+    .onComplete(_ => system.terminate())
 
 }
 
