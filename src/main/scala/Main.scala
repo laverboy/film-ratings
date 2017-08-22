@@ -31,7 +31,7 @@ object Main extends App {
 
   val poolClient: Flow[(HttpRequest, Film), (Try[HttpResponse], Film), NotUsed] = Http().superPool[Film]()
 
-  val films: Source[Film, Future[IOResult]] = FileIO.fromPath(Paths.get("src/main/resources/small.json"))
+  val films: Source[Film, Future[IOResult]] = FileIO.fromPath(Paths.get("src/main/resources/data.json"))
     .via(JsonFraming.objectScanner(1024))
     .map(_.utf8String)
     .map(Film.fromJson)
@@ -49,7 +49,7 @@ object Main extends App {
     .mapAsync(10)(a => a._1.map(x => Film(a._2.title, a._2.releaseYear, Some(Rating.fromJson(x)))))
     .map(Film.toString)
     .map(s => ByteString(s + "\n"))
-    .runWith(FileIO.toPath(Paths.get("small-output.json")))
+    .runWith(FileIO.toPath(Paths.get("output.json")))
     .onComplete(_ => system.terminate())
 
 }
