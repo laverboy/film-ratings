@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri.Query
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
+import akka.http.scaladsl.model._
 import akka.stream._
 import akka.stream.scaladsl._
 import org.json4s._
@@ -12,6 +12,7 @@ import org.json4s.native.JsonMethods._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 object Main extends App {
@@ -52,7 +53,7 @@ object Main extends App {
 
 }
 
-case class Film(title: String, releaseYear: Option[Int])
+case class Film(title: String, releaseYear: Option[Int], ratings: Option[List[Rating]])
 object Film {
   def fromJson(json: String): Film = {
     implicit val formats = DefaultFormats
@@ -62,11 +63,13 @@ object Film {
 
 case class Rating(Source: String, Value: String)
 
-//def thing(): Unit = {
-//  val jsonResponse = """{"Title":"My Son the Fanatic","Year":"1997","Rated":"R","Released":"07 Jan 1998","Runtime":"87 min","Genre":"Comedy, Drama, Romance","Director":"Udayan Prasad","Writer":"Hanif Kureishi (short story), Hanif Kureishi","Actors":"Om Puri, Rachel Griffiths, Akbar Kurtha, Stellan Skarsgård","Plot":"Pakistani taxi-driver Parvez and prostitute Bettina find themselves trapped in the middle when Islamic fundamentalists decide to clean up their local town.","Language":"English","Country":"UK, France","Awards":"1 win & 5 nominations.","Poster":"https://images-na.ssl-images-amazon.com/images/M/MV5BMTI2MTY1ODY2M15BMl5BanBnXkFtZTcwMjQ4NzMyMQ@@._V1_SX300.jpg","Ratings":[{"Source":"Internet Movie Database","Value":"7.0/10"},{"Source":"Rotten Tomatoes","Value":"78%"}],"Metascore":"N/A","imdbRating":"7.0","imdbVotes":"1,480","imdbID":"tt0119743","Type":"movie","DVD":"25 Jan 2000","BoxOffice":"N/A","Production":"Miramax","Website":"N/A","Response":"True"}"""
-//  val json = parse(jsonResponse) \ "Ratings"
-//
-//  implicit val formats = DefaultFormats
-//
-//  println(json.children.map(_.extract[Rating]))
-//}
+object Ratings {
+  def fromJson(json: String): List[Rating] = {
+    implicit val formats = DefaultFormats
+    try {
+      (parse(json) \ "Ratings").children.map(_.extract[Rating])
+    } catch {
+      case ex: Exception => List[Rating]()
+    }
+  }
+}
