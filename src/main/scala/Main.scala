@@ -7,8 +7,10 @@ import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.stream._
 import akka.stream.scaladsl._
+import akka.util.ByteString
 import org.json4s._
 import org.json4s.native.JsonMethods._
+import org.json4s.native.Serialization.{read, write}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
@@ -37,7 +39,7 @@ object Main extends App {
     .map(Film.fromJson)
 
   val result = films
-    .mapAsync(1)(createRequest)
+    .mapAsync(10)(createRequest)
     .via(poolClient)
     .map {
       case (Success(response), film) =>
@@ -46,8 +48,10 @@ object Main extends App {
         println(s"Uploading file ${film.title} failed with $ex")
         Future("") -> film
     }
-    .mapAsync(1)(a => a._1.map(x => Film(a._2.title, a._2.releaseYear, Some(Ratings.fromJson(x)))))
-    .runForeach(println)
+    .mapAsync(10)(a => a._1.map(x => Film(a._2.title, a._2.releaseYear, Some(Ratings.fromJson(x)))))
+    .map(Film.toString)
+    .map(s => ByteString(s + "\n"))
+    .runWith(FileIO.toPath(Paths.get("output.json")))
 
   implicit val ec = system.dispatcher
   result.onComplete(_ => system.terminate())
@@ -56,9 +60,12 @@ object Main extends App {
 
 case class Film(title: String, releaseYear: Option[Int], ratings: Option[List[Rating]])
 object Film {
+  implicit val formats = DefaultFormats
   def fromJson(json: String): Film = {
-    implicit val formats = DefaultFormats
     parse(json).camelizeKeys.extract[Film]
+  }
+  def toString(film: Film): String = {
+    write(film)
   }
 }
 
