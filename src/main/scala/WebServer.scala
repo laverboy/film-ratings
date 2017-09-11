@@ -6,10 +6,11 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.common.{EntityStreamingSupport, JsonEntityStreamingSupport}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server.Directives._
-import akka.stream.scaladsl.{FileIO, JsonFraming, Source}
-import akka.stream.{ActorMaterializer, IOResult}
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.{FileIO, JsonFraming, Keep, RunnableGraph, Sink}
 import spray.json._
 
+import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.io.StdIn
@@ -34,17 +35,7 @@ object WebServer {
     val route =
       pathSingleSlash {
         get {
-          val films: Source[Film, Future[IOResult]] = FileIO.fromPath(Paths.get("output.json"))
-            .via(JsonFraming.objectScanner(1024))
-            .map(_.utf8String)
-            .map(_.parseJson.convertTo[Film])
-            .filter(_.ratings.get.nonEmpty)
-            .filter(_.ratings.get.exists {
-              case item @ Rating("Metacritic", _) if item.realValue > 80 => true
-              case _ => false
-            })
-
-          complete(films)
+          complete(films().run().map(a => a.sortBy(ratingsSorter).reverse))
         }
       }
 
@@ -56,4 +47,22 @@ object WebServer {
       .flatMap(_.unbind()) // trigger unbinding from the port
       .onComplete(_ => system.terminate()) // and shutdown when done
   }
+
+  private def ratingsSorter(f: Film) = {
+      f.ratings.get.find {
+        case Rating("Metacritic", _) => true
+        case _ => false
+      }.get.realValue()
+  }
+
+  private def films(): RunnableGraph[Future[immutable.Seq[Film]]] = FileIO.fromPath(Paths.get("output.json"))
+    .via(JsonFraming.objectScanner(1024))
+    .map(_.utf8String)
+    .map(_.parseJson.convertTo[Film])
+    .filter(_.ratings.get.nonEmpty)
+    .filter(_.ratings.get.exists {
+      case item @ Rating("Metacritic", _) if item.realValue > 80 => true
+      case _ => false
+    })
+    .toMat(Sink.seq[Film])(Keep.right)
 }
