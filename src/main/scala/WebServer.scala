@@ -22,7 +22,9 @@ object MyJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
 }
 
 object WebServer {
+
   import MyJsonProtocol._
+
   implicit val jsonStreamingSupport: JsonEntityStreamingSupport = EntityStreamingSupport.json()
 
   def main(args: Array[String]) {
@@ -35,7 +37,9 @@ object WebServer {
     val route =
       pathSingleSlash {
         get {
-          complete(films().run().map(a => a.sortBy(ratingsSorter).reverse))
+          parameters('rating.as[String] ? "Metacritic") { rating =>
+            complete(films(rating).run().map(a => a.sortBy(film => ratingsSorter(film, rating)).reverse))
+          }
         }
       }
 
@@ -48,20 +52,19 @@ object WebServer {
       .onComplete(_ => system.terminate()) // and shutdown when done
   }
 
-  private def ratingsSorter(f: Film) = {
-      f.ratings.get.find {
-        case Rating("Metacritic", _) => true
-        case _ => false
-      }.get.realValue()
+  private def ratingsSorter(f: Film, rating: String) = {
+    f.ratings.get.find {
+      case Rating(ratingName, _) if ratingName == rating => true
+      case _ => false
+    }.get.realValue()
   }
 
-  private def films(): RunnableGraph[Future[immutable.Seq[Film]]] = FileIO.fromPath(Paths.get("output.json"))
+  private def films(rating: String): RunnableGraph[Future[immutable.Seq[Film]]] = FileIO.fromPath(Paths.get("output.json"))
     .via(JsonFraming.objectScanner(1024))
     .map(_.utf8String)
     .map(_.parseJson.convertTo[Film])
-    .filter(_.ratings.get.nonEmpty)
     .filter(_.ratings.get.exists {
-      case item @ Rating("Metacritic", _) if item.realValue > 80 => true
+      case item@Rating(ratingName, _) if ratingName == rating && item.realValue > 80 => true
       case _ => false
     })
     .toMat(Sink.seq[Film])(Keep.right)
