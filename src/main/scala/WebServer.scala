@@ -1,7 +1,7 @@
 import java.nio.file.Paths
 
 import Enrichment._
-import Models.{Film, Rating}
+import Models.{Broadcasts, Film, Rating}
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.common.{EntityStreamingSupport, JsonEntityStreamingSupport}
@@ -19,7 +19,8 @@ import scala.io.StdIn
 
 object MyJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val ratingFormat: RootJsonFormat[Rating] = jsonFormat2(Rating.apply)
-  implicit val filmFormat: RootJsonFormat[Film] = jsonFormat3(Film.apply)
+  implicit val broadcastFormat: RootJsonFormat[Broadcasts] = jsonFormat2(Broadcasts.apply)
+  implicit val filmFormat: RootJsonFormat[Film] = jsonFormat4(Film.apply)
 }
 
 object WebServer {

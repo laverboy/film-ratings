@@ -1,17 +1,24 @@
 package Models
 
-import org.json4s.DefaultFormats
-import org.json4s.native.JsonMethods._
-import org.json4s.native.Serialization.write
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import spray.json._
 
-case class Film(title: String, releaseYear: Option[Int], ratings: Option[List[Rating]])
+object MyJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+  implicit val ratingFormat: RootJsonFormat[Rating] = jsonFormat2(Rating.apply)
+  implicit val broadcastFormat: RootJsonFormat[Broadcasts] = jsonFormat2(Broadcasts.apply)
+  implicit val filmFormat: RootJsonFormat[Film] = jsonFormat4(Film.apply)
+}
+
+case class Film(title: String, releaseYear: Option[Int], ratings: Option[List[Rating]], broadcasts: Broadcasts)
 
 object Film {
-  implicit val formats = DefaultFormats
+
+  import MyJsonProtocol._
   def fromJson(json: String): Film = {
-    parse(json).camelizeKeys.extract[Film]
+    json.parseJson.convertTo[Film]
   }
+
   def toString(film: Film): String = {
-    write(film)
+    film.toJson.toString()
   }
 }

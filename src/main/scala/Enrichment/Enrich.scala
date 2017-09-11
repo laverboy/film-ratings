@@ -2,7 +2,8 @@ package Enrichment
 
 import java.nio.file.Paths
 
-import Models.{Film, Rating}
+import Models.MyJsonProtocol._
+import Models._
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -11,6 +12,7 @@ import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import akka.stream.scaladsl.{FileIO, Flow, JsonFraming, Keep, RunnableGraph, Source}
 import akka.stream.{ActorMaterializer, IOResult}
 import akka.util.ByteString
+import spray.json._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -30,10 +32,10 @@ case class Enrich(implicit val system: ActorSystem, implicit val materializer: A
 
   val poolClient: Flow[(HttpRequest, Film), (Try[HttpResponse], Film), NotUsed] = Http().superPool[Film]()
 
-  val films: Source[Film, Future[IOResult]] = FileIO.fromPath(Paths.get("src/main/resources/data.json"))
+  val films: Source[Film, Future[IOResult]] = FileIO.fromPath(Paths.get("src/main/resources/small.json"))
     .via(JsonFraming.objectScanner(1024))
     .map(_.utf8String)
-    .map(Film.fromJson)
+    .map(_.parseJson.convertTo[Film])
 
   val result: RunnableGraph[Future[IOResult]] = films
     .mapAsync(10)(createRequest)
@@ -46,8 +48,8 @@ case class Enrich(implicit val system: ActorSystem, implicit val materializer: A
         println(s"Uploading file ${film.title} failed with $ex")
         Future("") -> film
     }
-    .mapAsync(10)(a => a._1.map(x => Film(a._2.title, a._2.releaseYear, Some(Rating.fromJson(x)))))
+    .mapAsync(10)(a => a._1.map(x => Film(a._2.title, a._2.releaseYear, Some(Rating.fromJson(x)), a._2.broadcasts)))
     .map(Film.toString)
     .map(s => ByteString(s + "\n"))
-    .toMat(FileIO.toPath(Paths.get("output.json")))(Keep.right)
+    .toMat(FileIO.toPath(Paths.get("small-output.json")))(Keep.right)
 }
