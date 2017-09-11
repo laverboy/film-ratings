@@ -4,7 +4,13 @@ import org.json4s.DefaultFormats
 import org.json4s.native.JsonMethods.parse
 import org.json4s.native.Serialization.write
 
-case class Rating(Source: String, Value: String)
+case class Rating(Source: String, Value: String) {
+  def realValue(): Int = Source match {
+    case "Metacritic" => Value.split("/").head.toInt
+    case "Rotten Tomatoes" => Value.split("%").head.toInt
+    case "Internet Movie Database" => Value.split("/").head.replace(".", "").toInt
+  }
+}
 
 object Rating {
   implicit val formats = DefaultFormats

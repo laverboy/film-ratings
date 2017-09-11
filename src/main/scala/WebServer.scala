@@ -34,10 +34,15 @@ object WebServer {
     val route =
       pathSingleSlash {
         get {
-          val films: Source[Film, Future[IOResult]] = FileIO.fromPath(Paths.get("small-output.json"))
+          val films: Source[Film, Future[IOResult]] = FileIO.fromPath(Paths.get("output.json"))
             .via(JsonFraming.objectScanner(1024))
             .map(_.utf8String)
             .map(_.parseJson.convertTo[Film])
+            .filter(_.ratings.get.nonEmpty)
+            .filter(_.ratings.get.exists {
+              case item @ Rating("Metacritic", _) if item.realValue > 80 => true
+              case _ => false
+            })
 
           complete(films)
         }
