@@ -6,21 +6,18 @@ import Models.{Film, Rating}
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import akka.http.scaladsl.model.Uri.Query
-import akka.stream.{ActorMaterializer, IOResult}
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import akka.stream.scaladsl.{FileIO, Flow, JsonFraming, Keep, RunnableGraph, Source}
+import akka.stream.{ActorMaterializer, IOResult}
 import akka.util.ByteString
 
-import scala.concurrent.duration._
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-object Enrich {
-
-  implicit val system = ActorSystem("main")
-  implicit val materializer = ActorMaterializer()
+case class Enrich(implicit val system: ActorSystem, implicit val materializer: ActorMaterializer) {
 
   def createRequest(film: Film): Future[(HttpRequest, Film)] = {
     val query = film.releaseYear match {
@@ -43,6 +40,7 @@ object Enrich {
     .via(poolClient)
     .map {
       case (Success(response), film) =>
+        println("Successful call to omdbapi")
         response.entity.toStrict(5 seconds).map(_.data.decodeString("UTF-8")) -> film
       case (Failure(ex), film) =>
         println(s"Uploading file ${film.title} failed with $ex")

@@ -1,5 +1,6 @@
 import java.nio.file.Paths
 
+import Enrichment._
 import Models.{Film, Rating}
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -41,7 +42,14 @@ object WebServer {
             complete(films(rating).run().map(a => a.sortBy(film => ratingsSorter(film, rating)).reverse))
           }
         }
+      } ~
+    path("generate") {
+      get {
+        complete {
+          Enrich().result.run().map(a => "Done".toJson)
+        }
       }
+    }
 
     val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
 
