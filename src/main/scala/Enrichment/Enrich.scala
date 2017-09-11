@@ -32,7 +32,7 @@ case class Enrich(implicit val system: ActorSystem, implicit val materializer: A
 
   val poolClient: Flow[(HttpRequest, Film), (Try[HttpResponse], Film), NotUsed] = Http().superPool[Film]()
 
-  val films: Source[Film, Future[IOResult]] = FileIO.fromPath(Paths.get("src/main/resources/small.json"))
+  val films: Source[Film, Future[IOResult]] = FileIO.fromPath(Paths.get("src/main/resources/data.json"))
     .via(JsonFraming.objectScanner(1024))
     .map(_.utf8String)
     .map(_.parseJson.convertTo[Film])
@@ -51,5 +51,5 @@ case class Enrich(implicit val system: ActorSystem, implicit val materializer: A
     .mapAsync(10)(a => a._1.map(x => Film(a._2.title, a._2.releaseYear, Some(Rating.fromJson(x)), a._2.broadcasts)))
     .map(Film.toString)
     .map(s => ByteString(s + "\n"))
-    .toMat(FileIO.toPath(Paths.get("small-output.json")))(Keep.right)
+    .toMat(FileIO.toPath(Paths.get("output.json")))(Keep.right)
 }

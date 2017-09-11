@@ -14,6 +14,7 @@ import spray.json._
 import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.io.StdIn
 
 
@@ -44,13 +45,15 @@ object WebServer {
           }
         }
       } ~
-    path("generate") {
-      get {
-        complete {
-          Enrich().result.run().map(a => "Done".toJson)
+        path("generate") {
+          withRequestTimeout(Duration.Inf) {
+            get {
+              complete {
+                Enrich().result.run().map(a => "Done".toJson)
+              }
+            }
+          }
         }
-      }
-    }
 
     val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
 
