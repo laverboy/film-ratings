@@ -51,7 +51,7 @@ object WebServer {
           withRequestTimeout(2.minutes) {
             get {
               complete {
-                Enrich().result.run().map(a => "Done".toJson)
+                Enrich().result("src/main/resources/data.json", "output.json").run().map(a => "Done".toJson)
               }
             }
           }
