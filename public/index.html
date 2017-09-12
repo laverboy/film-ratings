@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Film Ratings</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
+
+    <script async src="scripts.js"></script>
+</head>
+<body>
+<div id="demo">
+    <h1>Redux Film Ratings</h1>
+    <h2>Films available on Redux sorted by
+        <select v-model="critic">
+            <option value="Internet Movie Database">IMDB</option>
+            <option value="Metacritic">Metacritic</option>
+            <option value="Rotten Tomatoes">Rotten Tomatoes</option>
+        </select>
+        rating
+    </h2>
+
+    <div class="table-responsive-vertical shadow-z-1">
+        <!-- Table starts here -->
+        <table id="table" class="table table-hover table-mc-light-blue">
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Ratings</th>
+                <th>Links</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <tr v-for="item in items">
+                <td>{{item.title}}</td>
+                <td>
+                    <span class="rating" v-for="rating in item.ratings">{{rating.Source}} - {{rating.Value}}</span>
+                </td>
+                <td>
+                    <a v-if="item.broadcasts.hd" :href="'https://www.bbcredux.com/asset/' + item.broadcasts.hd" target="_blank">HD</a>
+                    <a v-if="item.broadcasts.sd" :href="'https://www.bbcredux.com/asset/' + item.broadcasts.sd" target="_blank">SD</a>
+                </td>
+            </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>

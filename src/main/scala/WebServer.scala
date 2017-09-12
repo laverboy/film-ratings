@@ -39,12 +39,15 @@ object WebServer {
 
     val route =
       pathSingleSlash {
-        get {
-          parameters('rating.as[String] ? "Metacritic") { rating =>
-            complete(films(rating).run().map(a => a.sortBy(film => ratingsSorter(film, rating)).reverse))
-          }
-        }
+        getFromDirectory("public/index.html")
       } ~
+        path("data") {
+          get {
+            parameters('rating.as[String] ? "Metacritic") { rating =>
+              complete(films(rating).run().map(a => a.sortBy(film => ratingsSorter(film, rating)).reverse))
+            }
+          }
+        } ~
         path("generate") {
           withRequestTimeout(Duration.Inf) {
             get {
@@ -53,7 +56,8 @@ object WebServer {
               }
             }
           }
-        }
+        } ~
+        getFromDirectory("public")
 
     val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
 
