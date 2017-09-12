@@ -14,6 +14,7 @@ case class Film(title: String, release_year: Option[Int], ratings: Option[List[R
 object Film {
 
   import MyJsonProtocol._
+
   def fromJson(json: String): Film = {
     json.parseJson.convertTo[Film]
   }

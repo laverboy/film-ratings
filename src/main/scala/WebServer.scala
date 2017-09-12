@@ -1,6 +1,6 @@
 import java.nio.file.Paths
 
-import Enrichment._
+import Enrichment.Enrich
 import Models.{Broadcasts, Film, Rating}
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -43,7 +43,7 @@ object WebServer {
         path("data") {
           get {
             parameters('rating.as[String] ? "Metacritic", 'threshold.as[Int] ? 80) { (rating, threshold) =>
-              complete(films(rating, threshold).run().map(a => a.sortBy(film => ratingsSorter(film, rating)).reverse))
+              complete(films(rating, threshold).run().map(_.sortBy(film => ratingsSorter(film, rating)).reverse))
             }
           }
         } ~
@@ -56,7 +56,7 @@ object WebServer {
             }
           }
         } ~
-        getFromDirectory("public")
+        getFromDirectory("public") /* Default - if not caught by other routes */
 
     val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
 
@@ -74,7 +74,8 @@ object WebServer {
     }.get.realValue()
   }
 
-  private def films(rating: String, threshold: Int): RunnableGraph[Future[Seq[Film]]] = FileIO.fromPath(Paths.get("output.json"))
+  private def films(rating: String, threshold: Int): RunnableGraph[Future[Seq[Film]]] =
+    FileIO.fromPath(Paths.get("output.json"))
     .via(JsonFraming.objectScanner(1024))
     .map(_.utf8String)
     .map(_.parseJson.convertTo[Film])
