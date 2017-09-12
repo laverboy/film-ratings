@@ -21,7 +21,14 @@
             <option value="Metacritic">Metacritic</option>
             <option value="Rotten Tomatoes">Rotten Tomatoes</option>
         </select>
-        rating
+        rating above
+        <select v-model="threshold">
+            <option>90</option>
+            <option>80</option>
+            <option>70</option>
+            <option>60</option>
+            <option>50</option>
+        </select>
     </h2>
 
     <div class="table-responsive-vertical shadow-z-1">

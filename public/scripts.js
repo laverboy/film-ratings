@@ -7,6 +7,7 @@ new Vue({
   data: {
     currentBranch: 'dev',
     critic: 'Internet Movie Database',
+    threshold: 80,
     items: null
   },
 
@@ -17,13 +18,16 @@ new Vue({
   watch: {
     critic: function(){
         this.fetchData()
+    },
+    threshold: function(){
+        this.fetchData()
     }
   },
 
   methods: {
     fetchData: function () {
         var self = this;
-        $.get( apiURL + '?rating=' + this.critic, function( data ) {
+        $.get( apiURL + '?rating=' + this.critic + '&threshold=' + this.threshold, function( data ) {
             self.items = data;
         });
     }

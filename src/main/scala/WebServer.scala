@@ -11,7 +11,6 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{FileIO, JsonFraming, Keep, RunnableGraph, Sink}
 import spray.json._
 
-import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -43,8 +42,8 @@ object WebServer {
       } ~
         path("data") {
           get {
-            parameters('rating.as[String] ? "Metacritic") { rating =>
-              complete(films(rating).run().map(a => a.sortBy(film => ratingsSorter(film, rating)).reverse))
+            parameters('rating.as[String] ? "Metacritic", 'threshold.as[Int] ? 80) { (rating, threshold) =>
+              complete(films(rating, threshold).run().map(a => a.sortBy(film => ratingsSorter(film, rating)).reverse))
             }
           }
         } ~
@@ -75,12 +74,12 @@ object WebServer {
     }.get.realValue()
   }
 
-  private def films(rating: String): RunnableGraph[Future[immutable.Seq[Film]]] = FileIO.fromPath(Paths.get("output.json"))
+  private def films(rating: String, threshold: Int): RunnableGraph[Future[Seq[Film]]] = FileIO.fromPath(Paths.get("output.json"))
     .via(JsonFraming.objectScanner(1024))
     .map(_.utf8String)
     .map(_.parseJson.convertTo[Film])
     .filter(_.ratings.get.exists {
-      case item@Rating(ratingName, _) if ratingName == rating && item.realValue > 80 => true
+      case item@Rating(ratingName, _) if ratingName == rating && item.realValue > threshold => true
       case _ => false
     })
     .toMat(Sink.seq[Film])(Keep.right)
