@@ -1,5 +1,25 @@
 var apiURL = 'data';
 
+Vue.filter('formatName', function(value) {
+  if (value == "Internet Movie Database") {
+    return "IMDB"
+  }
+  return value
+})
+
+Vue.filter('formatClassName', function(value) {
+    switch(value) {
+        case "Internet Movie Database":
+            return "imdb"
+        case "Rotten Tomatoes":
+            return "rt"
+        case "Metacritic":
+            return "meta"
+        default:
+            return value
+    }
+})
+
 new Vue({
 
   el: '#demo',

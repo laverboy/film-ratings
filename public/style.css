@@ -92,6 +92,9 @@ body {
   -o-transition: all 0.3s ease;
   transition: all 0.3s ease;
 }
+.table > tbody > tr > td:first-child {
+    max-width: 420px;
+}
 .table > thead > tr > th {
   font-weight: 400;
   color: #757575;
@@ -600,5 +603,16 @@ body {
 }
 
 .rating {
-    padding-right: 5px;
+    margin-right: 5px;
+    padding: 5px;
+    border: 1px solid #cecece;
+}
+span.imdb {
+    background-color: #fffde7;
+}
+span.rt {
+    background-color: #fde0dc;
+}
+span.meta {
+    background-color: rgba(0, 0, 0, 0.12);
 }
