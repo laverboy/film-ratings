@@ -1,0 +1,89 @@
+{
+  "title": "My Son the Fanatic",
+  "release_year": 1997,
+  "ratings": [
+    {
+      "Source": "Internet Movie Database",
+      "Value": "7.0/10"
+    },
+    {
+      "Source": "Rotten Tomatoes",
+      "Value": "78%"
+    }
+  ],
+  "broadcasts": {
+    "hd": "d11fd8c5-e68c-4e94-aaac-20338922329b",
+    "sd": "f05dfb8f-5441-48a3-b345-46c86a0ca609"
+  }
+}
+{
+  "title": "I Went Down",
+  "ratings": [
+    {
+      "Source": "Internet Movie Database",
+      "Value": "7.0/10"
+    },
+    {
+      "Source": "Rotten Tomatoes",
+      "Value": "84%"
+    },
+    {
+      "Source": "Metacritic",
+      "Value": "69/100"
+    }
+  ],
+  "broadcasts": {
+    "sd": "145cb493-e7be-4e1f-8d9b-f29e815ba705"
+  }
+}
+{
+  "title": "The French Connection",
+  "release_year": 1971,
+  "ratings": [
+    {
+      "Source": "Internet Movie Database",
+      "Value": "7.8/10"
+    },
+    {
+      "Source": "Rotten Tomatoes",
+      "Value": "98%"
+    },
+    {
+      "Source": "Metacritic",
+      "Value": "96/100"
+    }
+  ],
+  "broadcasts": {
+    "sd": "abcf6322-d293-4b05-b765-0f84594f4919"
+  }
+}
+{
+  "title": "This Boy's Life",
+  "release_year": 1993,
+  "ratings": [
+    {
+      "Source": "Internet Movie Database",
+      "Value": "7.3/10"
+    },
+    {
+      "Source": "Rotten Tomatoes",
+      "Value": "75%"
+    },
+    {
+      "Source": "Metacritic",
+      "Value": "60/100"
+    }
+  ],
+  "broadcasts": {
+    "sd": "9f83e318-b3ce-4722-a386-b992e43062dd"
+  }
+}
+{
+  "title": "Deadly Pursuit",
+  "release_year": 1988,
+  "ratings": [],
+  "broadcasts": {
+    "hd": "88db2c35-d3e0-4348-a23b-f27da22f93ad",
+    "sd": "a61f7e61-4e4a-463d-8c64-b821e1424cf9"
+  }
+}

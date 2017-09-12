@@ -48,7 +48,7 @@ class EnrichTest extends TestKit(ActorSystem("MySpec"))
       val ratings = Some(List(Rating("Internet Movie Database","7.3/10"), Rating("Rotten Tomatoes","75%"), Rating("Metacritic","60/100")))
       assert(result.size == 5)
       assert(result.exists {
-        case Film("This Boy's Life", Some(1993), r, Broadcasts(None, Some("9f83e318-b3ce-4722-a386-b992e43062dd"))) if r == ratings => true
+        case Film("This Boy's Life", Some(1993), `ratings`, Broadcasts(None, Some("9f83e318-b3ce-4722-a386-b992e43062dd"))) => true
         case _ => false
       })
     }

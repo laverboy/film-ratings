@@ -42,8 +42,8 @@ object WebServer {
       } ~
         path("data") {
           get {
-            parameters('rating.as[String] ? "Metacritic", 'threshold.as[Int] ? 80) { (rating, threshold) =>
-              complete(films(rating, threshold).run().map(_.sortBy(film => ratingsSorter(film, rating)).reverse))
+            parameters('rating.as[String] ? "Metacritic", 'threshold.as[Int] ? 80) { (critic, threshold) =>
+              complete(films(critic, threshold, "output.json").run().map(_.sortBy(film => getCriticRating(film, critic)).reverse))
             }
           }
         } ~
@@ -67,21 +67,29 @@ object WebServer {
       .onComplete(_ => system.terminate()) // and shutdown when done
   }
 
-  private def ratingsSorter(f: Film, rating: String) = {
-    f.ratings.get.find {
-      case Rating(ratingName, _) if ratingName == rating => true
-      case _ => false
-    }.get.realValue()
-  }
+  private def getCriticRating(f: Film, critic: String): Option[Int] =
+    for {
+      ratings <- f.ratings
+      maybeScore <- ratings.find {
+        case Rating(`critic`, _) => true
+        case _ => false
+      }
+      score = maybeScore.realValue()
+    } yield score
 
-  private def films(rating: String, threshold: Int): RunnableGraph[Future[Seq[Film]]] =
-    FileIO.fromPath(Paths.get("output.json"))
+
+  def films(rating: String, threshold: Int, source: String): RunnableGraph[Future[Seq[Film]]] =
+    FileIO.fromPath(Paths.get(source))
     .via(JsonFraming.objectScanner(1024))
     .map(_.utf8String)
     .map(_.parseJson.convertTo[Film])
-    .filter(_.ratings.get.exists {
-      case item@Rating(ratingName, _) if ratingName == rating && item.realValue > threshold => true
-      case _ => false
-    })
+    .filter(hasCriticRatingThreshold(_, rating, threshold))
     .toMat(Sink.seq[Film])(Keep.right)
+
+  private def hasCriticRatingThreshold(film: Film, critic: String, threshold: Int): Boolean = {
+    getCriticRating(film, critic) match {
+      case Some(score: Int) => if (score > threshold) true else false
+      case None => false
+    }
+  }
 }
