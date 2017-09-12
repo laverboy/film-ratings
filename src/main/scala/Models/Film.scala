@@ -9,7 +9,7 @@ object MyJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val filmFormat: RootJsonFormat[Film] = jsonFormat4(Film.apply)
 }
 
-case class Film(title: String, releaseYear: Option[Int], ratings: Option[List[Rating]], broadcasts: Broadcasts)
+case class Film(title: String, release_year: Option[Int], ratings: Option[List[Rating]], broadcasts: Broadcasts)
 
 object Film {
 

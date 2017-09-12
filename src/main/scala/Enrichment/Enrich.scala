@@ -22,7 +22,7 @@ import scala.util.{Failure, Success, Try}
 case class Enrich(implicit val system: ActorSystem, implicit val materializer: ActorMaterializer) {
 
   def createRequest(film: Film): Future[(HttpRequest, Film)] = {
-    val query = film.releaseYear match {
+    val query = film.release_year match {
       case Some(year) => Query("t" -> film.title, "y" -> year.toString, "apikey" -> "41d3be47")
       case None => Query("t" -> film.title, "apikey" -> "41d3be47")
     }
@@ -48,7 +48,7 @@ case class Enrich(implicit val system: ActorSystem, implicit val materializer: A
         println(s"Uploading file ${film.title} failed with $ex")
         Future("") -> film
     }
-    .mapAsync(10)(a => a._1.map(x => Film(a._2.title, a._2.releaseYear, Some(Rating.fromJson(x)), a._2.broadcasts)))
+    .mapAsync(10)(a => a._1.map(x => Film(a._2.title, a._2.release_year, Some(Rating.fromJson(x)), a._2.broadcasts)))
     .map(Film.toString)
     .map(s => ByteString(s + "\n"))
     .toMat(FileIO.toPath(Paths.get("output.json")))(Keep.right)

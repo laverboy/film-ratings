@@ -49,7 +49,7 @@ object WebServer {
           }
         } ~
         path("generate") {
-          withRequestTimeout(Duration.Inf) {
+          withRequestTimeout(2.minutes) {
             get {
               complete {
                 Enrich().result.run().map(a => "Done".toJson)
